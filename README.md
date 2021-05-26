@@ -1,73 +1,50 @@
-# OmegaT plugin development skeleton
+# OmegaT theme plugin skeleton
 
-## How to get skeleton into your project
+This is OmegaT theme plugin skeleton to provide additional theme settings for OmegaT 5.6.0 and later.
 
-It is recommend to use `Use this template` button on upper-right side of github project page,
-to create your project repository.
+## Developer note
 
-![](https://docs.github.com/assets/images/help/repository/use-this-template-button.png)
+### OmegaT defaults
 
-## Gradle DSL
+Theme plugins can get OmegaT defaults through `DefaultFlatTheme#setDefaults` or
+`DefaultClassicTheme#setDefaults`, then customize and override it by following way.
 
-There are two examples in skeleton; Groovy DSL(`build.gradle`) and Kotlin DSL(`build.gradle.kts`)
-When you prefer Groovy DSL, please rename `build.gradle.disabled` to `build.gradle` and remove `build.gradle.kts`.
+```java
+public UIDefaults getDefaults(){
+        UIDefaults defaults=super.getDefaults();
+        // get OmegaT defaults
+        defaults=DefaultFlatTheme.setDefaults(defaults);
+        defaults.put("OmegaTBorder.color",borderColor);
+        return defaults;
+}
+```
 
-## Where you should change?
+### Default values of theme
 
-Here is a hint for modifications.
+Swing `UIManager` manages three "layers" of "defaults" (= sets of key-value settings). From the Javadoc:
 
-- Source code: `src/main/<lang>/*`
-- Test code: `src/test/<lang>/*` and `src/test/resources/*`
-- Project.name in `settings.gradle`
-- Properties: description, title, website and category
-- Plugin Main class name in `build.gradle.kts`.
-- Coding rules: `config/checkstyle/checkstyle.xml`
+1. Developer defaults. With few exceptions Swing does not alter the developer defaults; these are intended to be modified and used by the developer.
+2. Look and feel defaults. The look and feel defaults are supplied by the look and feel at the time it is installed as the current look and feel (setLookAndFeel() is invoked). The look and feel defaults can be obtained using the getLookAndFeelDefaults() method.
+3. Sytem defaults. The system defaults are provided by Swing.
+   
+In `setDefaults` implementation we can only set values on layer 2 (LAF defaults).
+However VLDocking's installUI puts all of its settings into layer 1.
+We can't override the VLDocking defaults from layer 2, so we have no choice
+but to put them in layer 1 via UIManager#put*.
 
-## Build system
+The correct solution is to change VLDocking: it should let you install
+its defaults into layer 2. But in the meantime we can work around it
+by using UIManager#put* in our setDefaults method.
 
-This skeleton use a Gradle build system as same as OmegaT version 4.3.0 and later.
+### When customize `Dockview`
 
-## Dependency
+You should use `UIManager#put` in the meantime like as follows;
 
-OmegaT and dependencies are located on remote maven repositories.
-It is necessary to connect the internet to compile your project.
-
-Current skeleton example refers OmegaT 5.2.0.
-
-All complex configurations to refer OmegaT core are handled by
-`gradle-omegat-plugin`.
-
-## FatJar(ShadowJar)
-
-OmegaT considered a plugin is a single jar file. If it is depend on some libraries, 
-you should ship your plugin with these libraries.
-It is why generating a FatJar, a single jar file with all runtime dependencies
-which is not provided with OmegaT.
-
-`gradle-omegat-plugin` offers special gradle configuration `ParckIntoJar`.
-When specified it, gradle will generate a proper FatJar for you.
-
-
-## Where is a built artifact?
-
-You can find distribution files in `build/distributions/*.zip`.
-Also you can find jar files at `build/libs/`
-
-## Test report
-
-You will find a test results report at `build/reports/` and can show it with your favorite web browser.
-
-## Github actions
-
-There is an example script to use Github Actions for CI/CD.
-
-
-## Installation
-
-You can get a plugin jar file from zip distribution file.
-OmegaT plugin should be placed in `$HOME/.omegat/plugin` or `C:\Program Files\OmegaT\plugin`
-depending on your operating system.
+```
+UIManager.put("DockViewTitleBar.border", new MatteBorder(1, 1, 1, 1, borderColor));
+```
 
 ## License
 
-This project is distributed under the GNU general public license version 3 or later.
+The plugin is distributed under GNU General Public License 3 or later.
+
